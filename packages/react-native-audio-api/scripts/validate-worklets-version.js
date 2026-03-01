@@ -1,6 +1,12 @@
 'use strict';
 
-const semverPrerelease = require('semver/functions/prerelease');
+// Optional semver: when used as a file: dependency, semver may not be installed.
+let semverPrerelease;
+try {
+  semverPrerelease = require('semver/functions/prerelease');
+} catch (_) {
+  semverPrerelease = (v) => (v && typeof v === 'string' && v.includes('-')) || false;
+}
 
 const validWorkletsVersions = ['0.6.0', '0.6.1', '0.7.0', '0.7.1'];
 
