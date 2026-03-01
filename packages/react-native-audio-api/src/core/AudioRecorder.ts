@@ -76,11 +76,10 @@ export default class AudioRecorder {
   /** Starts the audio recording process with configured output options */
   start(options?: AudioRecorderStartOptions): Result<{ path: string }> {
     if (!this.isFileOutputEnabled) {
-      this.recorder.start();
-      return { status: 'success', path: '' };
+      return this.recorder.start(options);
     }
 
-    return this.recorder.start(options?.fileNameOverride);
+    return this.recorder.start(options);
   }
 
   /** Stops the audio recording process and releases internal resources */

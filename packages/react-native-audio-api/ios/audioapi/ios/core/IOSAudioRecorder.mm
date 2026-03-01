@@ -71,7 +71,9 @@ IOSAudioRecorder::~IOSAudioRecorder()
 /// @brief Starts the audio recording process and prepares necessary resources.
 /// This method should be called from the JS thread only.
 /// @returns Result containing the file path if recording started successfully, or an error message.
-Result<std::string, std::string> IOSAudioRecorder::start(const std::string &fileNameOverride)
+Result<std::string, std::string> IOSAudioRecorder::start(
+    const std::string &fileNameOverride,
+    const std::string &androidInputPreset)
 {
   if (!isIdle()) {
     return Result<std::string, std::string>::Err("Recorder is already recording");

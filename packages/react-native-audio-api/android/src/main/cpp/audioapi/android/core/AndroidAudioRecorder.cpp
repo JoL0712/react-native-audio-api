@@ -17,6 +17,7 @@
 #include <audioapi/utils/CircularAudioArray.h>
 #include <audioapi/utils/CircularOverflowableAudioArray.h>
 
+#include <optional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -62,12 +63,43 @@ AndroidAudioRecorder::~AndroidAudioRecorder() {
   }
 }
 
+namespace {
+
+std::optional<oboe::InputPreset> parseInputPreset(const std::string &preset) {
+  if (preset.empty() || preset == "default") {
+    return std::nullopt;
+  }
+  if (preset == "generic") {
+    return oboe::InputPreset::Generic;
+  }
+  if (preset == "camcorder") {
+    return oboe::InputPreset::Camcorder;
+  }
+  if (preset == "voiceRecognition") {
+    return oboe::InputPreset::VoiceRecognition;
+  }
+  if (preset == "voiceCommunication") {
+    return oboe::InputPreset::VoiceCommunication;
+  }
+  if (preset == "unprocessed") {
+    return oboe::InputPreset::Unprocessed;
+  }
+  if (preset == "voicePerformance") {
+    return oboe::InputPreset::VoicePerformance;
+  }
+  return std::nullopt;
+}
+
+} // namespace
+
 /// @brief Creates and opens the Oboe audio input stream for recording.
 /// calculates the "native" or hardware stream parameters for other interfaces
 /// to use.
 /// Callable from the JS thread only.
+/// @param androidInputPreset Optional AAudio input preset (e.g. "unprocessed" for raw mic).
 /// @returns Success status or Error status with message.
-Result<NoneType, std::string> AndroidAudioRecorder::openAudioStream() {
+Result<NoneType, std::string> AndroidAudioRecorder::openAudioStream(
+    const std::string &androidInputPreset) {
   if (mStream_ != nullptr) {
     return Result<NoneType, std::string>::Ok(None);
   }
@@ -81,6 +113,11 @@ Result<NoneType, std::string> AndroidAudioRecorder::openAudioStream() {
       ->setSampleRateConversionQuality(oboe::SampleRateConversionQuality::Medium)
       ->setDataCallback(this)
       ->setErrorCallback(this);
+
+  auto preset = parseInputPreset(androidInputPreset);
+  if (preset.has_value()) {
+    builder.setInputPreset(preset.value());
+  }
 
   auto result = builder.openStream(mStream_);
 
@@ -104,14 +141,17 @@ Result<NoneType, std::string> AndroidAudioRecorder::openAudioStream() {
 /// RN side requires their "file://" prefix, but sometimes it returned raw path.
 /// Most likely this was due to alpha version mistakes, but in case of problems leaving this here. (ㆆ _ ㆆ)
 /// @returns On success, returns the file URI where the recording is being saved (if file output is enabled).
-Result<std::string, std::string> AndroidAudioRecorder::start(const std::string &fileNameOverride) {
+Result<std::string, std::string> AndroidAudioRecorder::start(
+    const std::string &fileNameOverride,
+    const std::string &androidInputPreset) {
   std::scoped_lock startLock(callbackMutex_, fileWriterMutex_, adapterNodeMutex_);
 
   if (!isIdle()) {
     return Result<std::string, std::string>::Err("Recorder is already recording");
   }
 
-  auto streamResult = openAudioStream();
+  lastInputPreset_ = androidInputPreset;
+  auto streamResult = openAudioStream(androidInputPreset);
 
   if (!streamResult.is_ok()) {
     return Result<std::string, std::string>::Err(streamResult.unwrap_err());
@@ -419,7 +459,7 @@ void AndroidAudioRecorder::onErrorAfterClose(oboe::AudioStream *stream, oboe::Re
   if (error == oboe::Result::ErrorDisconnected) {
     cleanup();
 
-    auto streamResult = openAudioStream();
+    auto streamResult = openAudioStream(lastInputPreset_);
 
     if (!streamResult.is_ok()) {
       uint64_t callbackId = errorCallbackId_.load(std::memory_order_acquire);

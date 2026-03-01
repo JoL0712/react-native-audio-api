@@ -246,6 +246,22 @@ export interface WaveShaperOptions extends AudioNodeOptions {
 
 export type DecodeDataInput = number | string | ArrayBuffer;
 
+/**
+ * Android-only. Maps to AAudio/Oboe input presets. When set, configures the
+ * capture path (e.g. raw unprocessed mic vs AGC/echo cancellation).
+ * Ignored on iOS.
+ */
+export type AndroidInputPreset =
+  | 'default'
+  | 'generic'
+  | 'camcorder'
+  | 'voiceRecognition'
+  | 'voiceCommunication'
+  | 'unprocessed'
+  | 'voicePerformance';
+
 export interface AudioRecorderStartOptions {
   fileNameOverride?: string;
+  /** Android only: input preset for capture (e.g. 'unprocessed' for raw mic). */
+  androidInputPreset?: AndroidInputPreset;
 }

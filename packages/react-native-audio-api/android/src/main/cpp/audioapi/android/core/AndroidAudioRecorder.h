@@ -27,7 +27,9 @@ class AndroidAudioRecorder : public oboe::AudioStreamCallback, public AudioRecor
   ~AndroidAudioRecorder() override;
   void cleanup();
 
-  Result<std::string, std::string> start(const std::string &fileNameOverride) override;
+  Result<std::string, std::string> start(
+      const std::string &fileNameOverride,
+      const std::string &androidInputPreset = "") override;
   Result<std::tuple<std::string, double, double>, std::string> stop() override;
 
   Result<std::string, std::string> enableFileOutput(
@@ -60,11 +62,13 @@ class AndroidAudioRecorder : public oboe::AudioStreamCallback, public AudioRecor
   float streamSampleRate_;
   int32_t streamChannelCount_;
   int32_t streamMaxBufferSizeInFrames_;
+  std::string lastInputPreset_;
 
   facebook::jni::global_ref<NativeAudioRecorder> nativeAudioRecorder_;
 
   std::shared_ptr<oboe::AudioStream> mStream_;
-  Result<NoneType, std::string> openAudioStream();
+  Result<NoneType, std::string> openAudioStream(
+      const std::string &androidInputPreset = "");
 };
 
 } // namespace audioapi

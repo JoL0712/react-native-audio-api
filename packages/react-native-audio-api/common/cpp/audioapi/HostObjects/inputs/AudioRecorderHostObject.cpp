@@ -42,8 +42,26 @@ AudioRecorderHostObject::AudioRecorderHostObject(
 }
 
 JSI_HOST_FUNCTION_IMPL(AudioRecorderHostObject, start) {
-  auto fileNameOverride = jsiutils::argToString(runtime, args, count, 0, "");
-  auto result = audioRecorder_->start(fileNameOverride);
+  std::string fileNameOverride;
+  std::string androidInputPreset;
+
+  if (count > 0 && !args[0].isUndefined() && !args[0].isNull()) {
+    if (args[0].isObject()) {
+      auto options = args[0].getObject(runtime);
+      if (options.hasProperty(runtime, "fileNameOverride")) {
+        auto v = options.getProperty(runtime, "fileNameOverride");
+        fileNameOverride = v.isString() ? v.getString(runtime).utf8(runtime) : "";
+      }
+      if (options.hasProperty(runtime, "androidInputPreset")) {
+        auto v = options.getProperty(runtime, "androidInputPreset");
+        androidInputPreset = v.isString() ? v.getString(runtime).utf8(runtime) : "";
+      }
+    } else if (args[0].isString()) {
+      fileNameOverride = args[0].getString(runtime).utf8(runtime);
+    }
+  }
+
+  auto result = audioRecorder_->start(fileNameOverride, androidInputPreset);
   auto jsResult = jsi::Object(runtime);
 
   jsResult.setProperty(

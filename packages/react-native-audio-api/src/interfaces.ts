@@ -2,6 +2,7 @@ import { AudioEventCallback, AudioEventName } from './events/types';
 import type {
   AudioRecorderCallbackOptions,
   AudioRecorderFileOptions,
+  AudioRecorderStartOptions,
   BiquadFilterType,
   ChannelCountMode,
   ChannelInterpretation,
@@ -318,7 +319,7 @@ export interface IAudioRecorderCallbackOptions
 
 export interface IAudioRecorder {
   // default recorder methods
-  start: (fileNameOverride?: string) => Result<{ path: string }>;
+  start: (options?: AudioRecorderStartOptions) => Result<{ path: string }>;
   stop: () => Result<FileInfo>;
   isRecording: () => boolean;
   isPaused: () => boolean;
