@@ -64,7 +64,7 @@ export type AudioDeviceList = AudioDeviceInfo[];
 export interface AudioDevicesInfo {
   availableInputs: AudioDeviceList;
   availableOutputs: AudioDeviceList;
-  currentInputs: AudioDeviceList; // iOS only
+  currentInputs: AudioDeviceList; // iOS: current route inputs; Android: preferred input device (0 or 1 element).
   currentOutputs: AudioDeviceList; // iOS only
 }
 

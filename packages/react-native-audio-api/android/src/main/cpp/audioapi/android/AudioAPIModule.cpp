@@ -1,4 +1,5 @@
 #include <audioapi/android/AudioAPIModule.h>
+#include <audioapi/android/AndroidPreferredInputDevice.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -50,7 +51,26 @@ void AudioAPIModule::registerNatives() {
       makeNativeMethod(
           "invokeHandlerWithEventNameAndEventBody",
           AudioAPIModule::invokeHandlerWithEventNameAndEventBody),
+      makeNativeMethod(
+          "nativeSetPreferredInputDevice",
+          AudioAPIModule::setPreferredInputDevice),
   });
+}
+
+void AudioAPIModule::setPreferredInputDevice(
+    jni::alias_ref<jni::JString> deviceId) {
+  int32_t id = -1;
+  if (deviceId) {
+    std::string s = deviceId->toStdString();
+    if (!s.empty()) {
+      try {
+        id = static_cast<int32_t>(std::stol(s));
+      } catch (...) {
+        id = -1;
+      }
+    }
+  }
+  setPreferredInputDeviceId(id);
 }
 
 void AudioAPIModule::injectJSIBindings() {

@@ -47,6 +47,8 @@ class AudioAPIModule(
     eventBody: Map<String, Any>,
   )
 
+  private external fun nativeSetPreferredInputDevice(deviceId: String)
+
   init {
     try {
       System.loadLibrary("react-native-audio-api")
@@ -167,12 +169,29 @@ class AudioAPIModule(
     promise.resolve(MediaSessionManager.getDevicesInfo())
   }
 
+  @RequiresApi(Build.VERSION_CODES.O)
   override fun setInputDevice(
     deviceId: String?,
     promise: Promise?,
   ) {
-    // TODO: noop for now, but it should be moved to upcoming
-    // audio engine implementation for android (duplex stream)
+    if (deviceId.isNullOrBlank()) {
+      MediaSessionManager.setPreferredInputDevice(null)
+      nativeSetPreferredInputDevice("")
+      promise?.resolve(true)
+      return
+    }
+    val parsedId = try {
+      deviceId.toInt()
+    } catch (e: NumberFormatException) {
+      promise?.resolve(false)
+      return
+    }
+    if (!MediaSessionManager.isInputDeviceIdValid(parsedId)) {
+      promise?.resolve(false)
+      return
+    }
+    MediaSessionManager.setPreferredInputDevice(parsedId)
+    nativeSetPreferredInputDevice(deviceId)
     promise?.resolve(true)
   }
 

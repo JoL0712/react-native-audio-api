@@ -39,6 +39,9 @@ object MediaSessionManager {
   // New notification system
   private lateinit var notificationRegistry: NotificationRegistry
 
+  // Preferred input device for recording (synced to C++ for Oboe stream).
+  private var preferredInputDeviceId: Int? = null
+
   fun initialize(
     audioAPIModule: WeakReference<AudioAPIModule>,
     reactContext: WeakReference<ReactApplicationContext>,
@@ -189,6 +192,16 @@ object MediaSessionManager {
     return "Granted"
   }
 
+  fun setPreferredInputDevice(deviceId: Int?) {
+    preferredInputDeviceId = deviceId
+  }
+
+  fun getPreferredInputDeviceId(): Int? = preferredInputDeviceId
+
+  @RequiresApi(Build.VERSION_CODES.O)
+  fun isInputDeviceIdValid(deviceId: Int): Boolean =
+    this.audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS).any { it.id == deviceId }
+
   @RequiresApi(Build.VERSION_CODES.O)
   private fun createChannel() {
     val notificationManager =
@@ -225,9 +238,22 @@ object MediaSessionManager {
       availableOutputs.pushMap(deviceInfo)
     }
 
+    val currentInputs = Arguments.createArray()
+    preferredInputDeviceId?.let { preferredId ->
+      this.audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS)
+        .firstOrNull { it.id == preferredId }
+        ?.let { device ->
+          val deviceInfo = Arguments.createMap()
+          deviceInfo.putString("id", device.getId().toString())
+          deviceInfo.putString("name", device.productName.toString())
+          deviceInfo.putString("type", parseDeviceType(device))
+          currentInputs.pushMap(deviceInfo)
+        }
+    }
+
     val devicesInfo = Arguments.createMap()
 
-    devicesInfo.putArray("currentInputs", Arguments.createArray())
+    devicesInfo.putArray("currentInputs", currentInputs)
     devicesInfo.putArray("currentOutputs", Arguments.createArray())
     devicesInfo.putArray("availableInputs", availableInputs)
     devicesInfo.putArray("availableOutputs", availableOutputs)

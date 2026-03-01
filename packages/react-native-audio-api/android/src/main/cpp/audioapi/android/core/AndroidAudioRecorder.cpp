@@ -1,4 +1,5 @@
 #include <audioapi/android/core/AndroidAudioRecorder.h>
+#include <audioapi/android/AndroidPreferredInputDevice.h>
 #include <audioapi/android/core/utils/AndroidFileWriterBackend.h>
 #include <audioapi/android/core/utils/AndroidRecorderCallback.h>
 
@@ -117,6 +118,11 @@ Result<NoneType, std::string> AndroidAudioRecorder::openAudioStream(
   auto preset = parseInputPreset(androidInputPreset);
   if (preset.has_value()) {
     builder.setInputPreset(preset.value());
+  }
+
+  int32_t preferredId = getPreferredInputDeviceId();
+  if (preferredId >= 0) {
+    builder.setDeviceId(preferredId);
   }
 
   auto result = builder.openStream(mStream_);
