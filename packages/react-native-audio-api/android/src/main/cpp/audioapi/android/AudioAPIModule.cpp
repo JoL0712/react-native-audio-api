@@ -70,6 +70,7 @@ void AudioAPIModule::setPreferredInputDevice(
       }
     }
   }
+  // -1 means no preference; next recorder open will use system default.
   setPreferredInputDeviceId(id);
 }
 
