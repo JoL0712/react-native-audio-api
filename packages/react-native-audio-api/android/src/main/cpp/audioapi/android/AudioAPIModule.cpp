@@ -53,6 +53,7 @@ void AudioAPIModule::registerNatives() {
           AudioAPIModule::invokeHandlerWithEventNameAndEventBody),
       makeNativeMethod(
           "nativeSetPreferredInputDevice",
+          "(Ljava/lang/String;)V",
           AudioAPIModule::setPreferredInputDevice),
   });
 }

@@ -62,6 +62,14 @@ jobs:
         if: ${{ env.PACKAGE_NAME == 'PLACEHOLDER' }}
         run: exit 1
 
+      - name: Rename package to include build ID
+        working-directory: ${{ env.AUDIO_API_DIR }}
+        run: |
+          BUILD_ID="${{ github.run_id }}"
+          NEW_NAME="${PACKAGE_NAME%.tgz}-build-${BUILD_ID}.tgz"
+          mv "$PACKAGE_NAME" "$NEW_NAME"
+          echo "PACKAGE_NAME=$NEW_NAME" >> $GITHUB_ENV
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
