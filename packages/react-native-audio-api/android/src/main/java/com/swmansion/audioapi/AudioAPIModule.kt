@@ -47,7 +47,8 @@ class AudioAPIModule(
     eventBody: Map<String, Any>,
   )
 
-  private external fun nativeSetPreferredInputDevice(deviceId: String)
+  /** JNI: implemented in this module's C++ (AudioAPIModule.cpp); signature (Ljava/lang/Object;)V. */
+  private external fun nativeSetPreferredInputDevice(deviceId: Any?)
 
   init {
     try {
@@ -174,14 +175,17 @@ class AudioAPIModule(
     deviceId: String?,
     promise: Promise?,
   ) {
-    if (deviceId.isNullOrBlank()) {
+    // Only pass a real String to JNI. Null or non-string from the bridge is treated as "".
+    // C++ also validates the object type before use.
+    val deviceIdStr = (deviceId as? String)?.trim() ?: ""
+    if (deviceIdStr.isBlank()) {
       MediaSessionManager.setPreferredInputDevice(null)
       nativeSetPreferredInputDevice("")
       promise?.resolve(true)
       return
     }
     val parsedId = try {
-      deviceId.toInt()
+      deviceIdStr.toInt()
     } catch (e: NumberFormatException) {
       promise?.resolve(false)
       return
@@ -191,7 +195,7 @@ class AudioAPIModule(
       return
     }
     MediaSessionManager.setPreferredInputDevice(parsedId)
-    nativeSetPreferredInputDevice(deviceId)
+    nativeSetPreferredInputDevice(deviceIdStr)
     promise?.resolve(true)
   }
 

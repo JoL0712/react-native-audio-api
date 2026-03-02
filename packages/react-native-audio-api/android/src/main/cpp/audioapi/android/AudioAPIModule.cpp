@@ -53,16 +53,18 @@ void AudioAPIModule::registerNatives() {
           AudioAPIModule::invokeHandlerWithEventNameAndEventBody),
       makeNativeMethod(
           "nativeSetPreferredInputDevice",
-          "(Ljava/lang/String;)V",
+          "(Ljava/lang/Object;)V",
           AudioAPIModule::setPreferredInputDevice),
   });
 }
 
 void AudioAPIModule::setPreferredInputDevice(
-    jni::alias_ref<jni::JString> deviceId) {
+    jni::alias_ref<jni::JObject> deviceIdOrNull) {
   int32_t id = -1;
-  if (deviceId) {
-    std::string s = deviceId->toStdString();
+  if (deviceIdOrNull &&
+      deviceIdOrNull->isInstanceOf(jni::JString::javaClassStatic())) {
+    std::string s =
+        jni::static_ref_cast<jni::JString>(deviceIdOrNull)->toStdString();
     if (!s.empty()) {
       try {
         id = static_cast<int32_t>(std::stol(s));

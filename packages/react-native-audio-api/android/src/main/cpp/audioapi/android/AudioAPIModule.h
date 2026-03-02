@@ -32,7 +32,7 @@ class AudioAPIModule : public jni::HybridClass<AudioAPIModule> {
 
   static void registerNatives();
 
-  static void setPreferredInputDevice(jni::alias_ref<jni::JString> deviceId);
+  static void setPreferredInputDevice(jni::alias_ref<jni::JObject> deviceIdOrNull);
 
   void injectJSIBindings();
   void invokeHandlerWithEventNameAndEventBody(jint eventOrdinal, jni::alias_ref<jni::JMap<jstring, jobject>> eventBody);
